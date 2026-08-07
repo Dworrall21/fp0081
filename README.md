@@ -45,4 +45,4 @@ Full hash-verified trail: `evidence.sha256` (106 entries) + docs/.
 
 ## License
 
-Research/experimental. No warranty. Use at your own risk.
+MIT License (see LICENSE). Research/experimental. No warranty. Use at your own risk.
