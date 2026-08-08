@@ -79,3 +79,31 @@ blocker and package. Do NOT continue open-ended debugging.
 - Worktree: `/tmp/synaTudor-0081` (patched clone; patches listed in tar manifest)
 - GDB scripts: `/tmp/tudor-instr.gdb`, `/tmp/tudor-crash.gdb`
 - Sol context: `/tmp/sol-next-step.md`, `/tmp/sol-context.md`
+
+## Post-verdict follow-up (Sol verdict 2, request c9510437) — dispatcher analysis NEGATIVE
+
+Per Sol verdict 2 (Path A): one bounded dispatcher-registration analysis + sequence
+comparison, then stop unless a concrete trigger is found.
+
+Executed (host-side only):
+1. Runtime .data dump post-open (0x7ffff5845000-0x7ffff58a7c28) scanned for the
+   absolute pointer to 0x18006e900: ZERO hits (also zero for helpers 0xda200,
+   0xe5bd0, 0xe7000, 0xeab60).
+2. Static .rdata/.data scan for the 32-bit RVA 0x0006e900: one candidate at
+   .rdata+0x1a353, but neighboring entries are not function pointers — false
+   positive (embedded byte coincidence).
+3. ioctl dispatch enumeration (cmp eax/sub/and-mask patterns): no linear switch;
+   dispatch is not statically enumerable without deep component analysis.
+
+Conclusion (strengthened, matches Sol stop condition):
+
+Native enrollment is blocked by an unimplemented Windows lifecycle/dispatch
+transition upstream of Synaptics security-management initialization
+(scsSecMgmt, RVA 0x18006e900). The relinked Linux request path reaches
+CreateEnrollment (0x44200c) without ever populating CBiometricDevice+0x1c0;
+the setup routine is dispatched indirectly through an internal interface that
+the relink host does not implement/trigger. No concrete callable trigger was
+found; broad ioctl fuzzing is explicitly out of scope per verdict.
+
+Sol verdict 2 (full text): thread /c/6a76a9b5 in the chatgpt-bridge project
+(request c9510437-8744-4d1d-87a6-50f7c1feb1a2).
